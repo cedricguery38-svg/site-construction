@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MicroRadio — Bientôt à l'antenne</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night:      #0d121c;
+    --night-deep: #080b12;
+    --amber:      #e8a33d;
+    --amber-dim:  #7a5a29;
+    --paper:      #f2efe9;
+    --paper-dim:  #a9a49a;
+    --teal:       #3a6b63;
+    --on-air:     #c1443c;
+    --hair: rgba(242,239,233,0.12);
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  html{ scroll-behavior:smooth; }
+
+  body{
+    background:var(--night);
+    color:var(--paper);
+    font-family:'Inter', sans-serif;
+    overflow-x:hidden;
+    position:relative;
+  }
+
+  /* grain / static texture */
+  body::before{
+    content:"";
+    position:fixed; inset:0;
+    z-index:2;
+    pointer-events:none;
+    opacity:0.05;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  a{ color:inherit; }
+
+  .wrap{ max-width:960px; margin:0 auto; padding:0 28px; }
+
+  /* ---------- topbar ---------- */
+  .topbar{
+    position:relative; z-index:3;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:28px 0 0;
+  }
+  .brand{
+    font-family:'Instrument Serif', serif;
+    font-size:1.35rem;
+    letter-spacing:0.02em;
+  }
+  .brand em{ color:var(--amber); font-style:normal; }
+  .status-pill{
+    display:flex; align-items:center; gap:8px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.72rem;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--paper-dim);
+    border:1px solid var(--hair);
+    padding:7px 14px 7px 10px;
+    border-radius:999px;
+  }
+  .status-pill .dot{
+    width:7px; height:7px; border-radius:50%;
+    background:var(--on-air);
+    box-shadow:0 0 0 0 rgba(193,68,60,0.6);
+    animation:pulse 2.2s ease-out infinite;
+  }
+  @keyframes pulse{
+    0%{ box-shadow:0 0 0 0 rgba(193,68,60,0.55); }
+    70%{ box-shadow:0 0 0 8px rgba(193,68,60,0); }
+    100%{ box-shadow:0 0 0 0 rgba(193,68,60,0); }
+  }
+
+  /* ---------- hero ---------- */
+  .hero{
+    position:relative; z-index:3;
+    padding:64px 0 40px;
+    text-align:center;
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.78rem;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--amber);
+    margin-bottom:22px;
+  }
+  h1{
+    font-family:'Instrument Serif', serif;
+    font-weight:400;
+    font-size:clamp(2.6rem, 7vw, 5.2rem);
+    line-height:1.02;
+    letter-spacing:-0.01em;
+  }
+  h1 .italic{ font-style:italic; color:var(--amber); }
+  .tagline{
+    max-width:480px;
+    margin:22px auto 0;
+    color:var(--paper-dim);
+    font-size:1.02rem;
+    line-height:1.6;
+  }
+
+  /* ---------- tuning dial ---------- */
+  .dial-section{
+    position:relative; z-index:3;
+    padding:38px 0 10px;
+  }
+  .dial{
+    position:relative;
+    max-width:640px;
+    margin:0 auto;
+  }
+  .freq-readout{
+    display:flex; align-items:baseline; justify-content:center;
+    gap:10px;
+    font-family:'JetBrains Mono', monospace;
+    margin-bottom:18px;
+  }
+  .freq-readout .num{
+    font-size:clamp(2.2rem, 6vw, 3.4rem);
+    font-weight:700;
+    color:var(--amber);
+    letter-spacing:0.01em;
+    font-variant-numeric: tabular-nums;
+  }
+  .freq-readout .unit{
+    font-size:0.9rem;
+    color:var(--paper-dim);
+    letter-spacing:0.08em;
+  }
+
+  .scale{
+    position:relative;
+    height:70px;
+    border-top:1px solid var(--hair);
+    border-bottom:1px solid var(--hair);
+    overflow:hidden;
+  }
+  .scale-track{
+    position:absolute; inset:0;
+    display:flex;
+    align-items:flex-end;
+    padding-bottom:10px;
+    animation: drift 26s linear infinite;
+  }
+  .tick{
+    flex:0 0 auto;
+    width:28px;
+    display:flex;
+    justify-content:center;
+  }
+  .tick i{
+    display:block;
+    width:1px;
+    height:14px;
+    background:var(--hair);
+  }
+  .tick.major i{ height:26px; background:var(--paper-dim); }
+  .tick.label{
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.65rem;
+    color:var(--paper-dim);
+    transform:translateY(-30px);
+  }
+  @keyframes drift{
+    0%{ transform:translateX(0); }
+    100%{ transform:translateX(-33.333%); }
+  }
+  .needle{
+    position:absolute;
+    top:0; bottom:0; left:50%;
+    width:2px;
+    background:var(--on-air);
+    transform:translateX(-50%);
+    box-shadow:0 0 10px rgba(193,68,60,0.55);
+  }
+  .needle::after{
+    content:"";
+    position:absolute; top:-4px; left:50%;
+    width:8px; height:8px;
+    background:var(--on-air);
+    border-radius:50%;
+    transform:translateX(-50%);
+  }
+
+  /* ---------- countdown ---------- */
+  .countdown{
+    display:flex; justify-content:center; gap:14px;
+    margin:36px 0 6px;
+    flex-wrap:wrap;
+  }
+  .cd-block{
+    min-width:78px;
+    text-align:center;
+    border:1px solid var(--hair);
+    border-radius:10px;
+    padding:14px 10px 12px;
+    background:rgba(242,239,233,0.02);
+  }
+  .cd-block .n{
+    font-family:'JetBrains Mono', monospace;
+    font-size:1.7rem;
+    font-weight:700;
+    font-variant-numeric: tabular-nums;
+    color:var(--paper);
+  }
+  .cd-block .l{
+    margin-top:4px;
+    font-size:0.62rem;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--paper-dim);
+  }
+
+  .launch-date{
+    text-align:center;
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.75rem;
+    color:var(--paper-dim);
+    letter-spacing:0.05em;
+    margin-top:16px;
+  }
+  .launch-date strong{ color:var(--amber); font-weight:500; }
+
+  /* ---------- signup ---------- */
+  .signup{
+    position:relative; z-index:3;
+    padding:64px 0;
+    text-align:center;
+  }
+  .signup h2{
+    font-family:'Instrument Serif', serif;
+    font-weight:400;
+    font-size:clamp(1.6rem, 4vw, 2.3rem);
+    margin-bottom:12px;
+  }
+  .signup p{
+    color:var(--paper-dim);
+    max-width:420px;
+    margin:0 auto 28px;
+    line-height:1.6;
+  }
+  .form-row{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    max-width:420px;
+    margin:0 auto;
+    flex-wrap:wrap;
+  }
+  .form-row input{
+    flex:1 1 220px;
+    background:transparent;
+    border:1px solid var(--hair);
+    border-radius:8px;
+    padding:13px 16px;
+    color:var(--paper);
+    font-family:'Inter', sans-serif;
+    font-size:0.92rem;
+    outline:none;
+    transition:border-color .2s ease;
+  }
+  .form-row input::placeholder{ color:var(--paper-dim); }
+  .form-row input:focus{ border-color:var(--amber); }
+  .form-row button{
+    flex:0 0 auto;
+    background:var(--amber);
+    color:var(--night-deep);
+    border:none;
+    border-radius:8px;
+    padding:13px 22px;
+    font-family:'Inter', sans-serif;
+    font-weight:600;
+    font-size:0.92rem;
+    cursor:pointer;
+    transition:transform .15s ease, background .2s ease;
+  }
+  .form-row button:hover{ background:#f3b458; }
+  .form-row button:active{ transform:scale(0.97); }
+  .form-row button:focus-visible,
+  .form-row input:focus-visible{ outline:2px solid var(--amber); outline-offset:2px; }
+  .form-note{
+    margin-top:14px;
+    font-size:0.72rem;
+    color:var(--paper-dim);
+  }
+  .confirm{
+    margin-top:14px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.78rem;
+    color:var(--amber);
+    display:none;
+  }
+  .confirm.show{ display:block; }
+
+  /* ---------- programs ---------- */
+  .programs{
+    position:relative; z-index:3;
+    padding:20px 0 70px;
+  }
+  .programs .head{
+    display:flex; align-items:baseline; justify-content:space-between;
+    border-bottom:1px solid var(--hair);
+    padding-bottom:16px;
+    margin-bottom:6px;
+  }
+  .programs .head h2{
+    font-family:'Instrument Serif', serif;
+    font-weight:400;
+    font-size:1.5rem;
+  }
+  .programs .head span{
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.7rem;
+    color:var(--paper-dim);
+    letter-spacing:0.08em;
+  }
+  .show-row{
+    display:grid;
+    grid-template-columns:88px 1fr auto;
+    gap:22px;
+    align-items:center;
+    padding:22px 0;
+    border-bottom:1px solid var(--hair);
+  }
+  .show-row .time{
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.85rem;
+    color:var(--amber);
+  }
+  .show-row .info h3{
+    font-family:'Instrument Serif', serif;
+    font-weight:400;
+    font-style:italic;
+    font-size:1.25rem;
+    margin-bottom:5px;
+  }
+  .show-row .info p{
+    color:var(--paper-dim);
+    font-size:0.88rem;
+    line-height:1.5;
+    max-width:520px;
+  }
+  .show-row .tag{
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.65rem;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--teal);
+    border:1px solid rgba(58,107,99,0.5);
+    padding:5px 10px;
+    border-radius:999px;
+    white-space:nowrap;
+  }
+
+  @media (max-width:600px){
+    .show-row{ grid-template-columns:1fr; gap:8px; }
+    .show-row .tag{ justify-self:start; }
+  }
+
+  /* ---------- footer ---------- */
+  footer{
+    position:relative; z-index:3;
+    border-top:1px solid var(--hair);
+    padding:30px 0 40px;
+    display:flex; align-items:center; justify-content:space-between;
+    flex-wrap:wrap; gap:14px;
+  }
+  footer .fbrand{
+    font-family:'Instrument Serif', serif;
+    font-size:1rem;
+    color:var(--paper-dim);
+  }
+  footer .flinks{
+    display:flex; gap:20px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.72rem;
+    letter-spacing:0.05em;
+    color:var(--paper-dim);
+  }
+  footer .flinks a{ text-decoration:none; }
+  footer .flinks a:hover{ color:var(--amber); }
+
+  @media (prefers-reduced-motion: reduce){
+    .scale-track{ animation:none; }
+    .status-pill .dot{ animation:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="brand">Micro<em>Radio</em></div>
+    <div class="status-pill"><span class="dot"></span> Signal en préparation</div>
+  </div>
+
+  <section class="hero">
+    <div class="eyebrow">Webradio &amp; podcast indépendant</div>
+    <h1>On règle encore<br><span class="italic">l'antenne</span>.</h1>
+    <p class="tagline">Musique choisie à l'oreille, voix qu'on a envie d'écouter, et quelques émissions qu'on ne trouve nulle part ailleurs. Ça arrive bientôt.</p>
+  </section>
+
+  <section class="dial-section">
+    <div class="dial">
+      <div class="freq-readout">
+        <span class="num" id="freqNum">87.9</span>
+        <span class="unit">MHz — pas encore calé</span>
+      </div>
+      <div class="scale">
+        <div class="scale-track" id="scaleTrack"></div>
+        <div class="needle"></div>
+      </div>
+
+      <div class="countdown" id="countdown">
+        <div class="cd-block"><div class="n" id="cd-d">--</div><div class="l">jours</div></div>
+        <div class="cd-block"><div class="n" id="cd-h">--</div><div class="l">heures</div></div>
+        <div class="cd-block"><div class="n" id="cd-m">--</div><div class="l">min</div></div>
+        <div class="cd-block"><div class="n" id="cd-s">--</div><div class="l">sec</div></div>
+      </div>
+      <div class="launch-date">Mise à l'antenne prévue le <strong>1er octobre 2026</strong></div>
+    </div>
+  </section>
+
+  <section class="signup">
+    <h2>Soyez prévenu au premier grésillement</h2>
+    <p>Un seul message, le jour où on allume vraiment le micro. Pas de spam, pas de playlist "découvrez aussi".</p>
+    <form id="notifyForm">
+      <div class="form-row">
+        <input type="email" id="emailInput" placeholder="votre@email.com" required aria-label="Adresse e-mail">
+        <button type="submit">Me prévenir</button>
+      </div>
+    </form>
+    <div class="confirm" id="confirmMsg">✓ C'est noté — on vous écrit le jour J.</div>
+    <div class="form-note">Aucune donnée envoyée nulle part, cette page n'est qu'une maquette.</div>
+  </section>
+
+  <footer>
+    <div class="fbrand">MicroRadio</div>
+    <div class="flinks">
+      <a href="#">Instagram</a>
+      <a href="#">Mastodon</a>
+      <a href="#">RSS</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  // build the frequency scale ticks (repeated 3x for seamless drift loop)
+  (function(){
+    const track = document.getElementById('scaleTrack');
+    const start = 76, end = 108; // FM band
+    let html = '';
+    for(let rep=0; rep<3; rep++){
+      for(let f=start; f<=end; f+=1){
+        const isMajor = f % 5 === 0;
+        html += `<div class="tick${isMajor ? ' major' : ''}"><i></i></div>`;
+      }
+    }
+    track.innerHTML = html;
+  })();
+
+  // slowly cycle the readout number to feel like a dial searching for signal
+  (function(){
+    const el = document.getElementById('freqNum');
+    const vals = ['87.9','92.3','98.1','101.5','104.7','96.2'];
+    let i = 0;
+    setInterval(()=>{
+      i = (i+1) % vals.length;
+      el.textContent = vals[i];
+    }, 3200);
+  })();
+
+  // countdown to launch
+  (function(){
+    const target = new Date('2026-10-01T00:00:00');
+    function tick(){
+      const now = new Date();
+      let diff = target - now;
+      if(diff < 0) diff = 0;
+      const d = Math.floor(diff / 86400000);
+      const h = Math.floor((diff % 86400000) / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      document.getElementById('cd-d').textContent = String(d).padStart(2,'0');
+      document.getElementById('cd-h').textContent = String(h).padStart(2,'0');
+      document.getElementById('cd-m').textContent = String(m).padStart(2,'0');
+      document.getElementById('cd-s').textContent = String(s).padStart(2,'0');
+    }
+    tick();
+    setInterval(tick, 1000);
+  })();
+
+  // fake signup confirmation
+  document.getElementById('notifyForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    const msg = document.getElementById('confirmMsg');
+    msg.classList.add('show');
+    document.getElementById('emailInput').value = '';
+  });
+</script>
+
+</body>
+</html>
